@@ -55,24 +55,23 @@ if (!parsedClient.success) {
 
 export const clientEnv = parsedClient.data;
 
+type ServerEnv = z.infer<typeof serverSchema> & typeof clientEnv;
+
+let serverEnv: ServerEnv | undefined;
+
 /**
- * Server configuration. Accessing this from client code throws rather than
- * silently returning undefined, which is the failure mode that leaks secrets
- * into a bundle.
+ * Parses and caches the server environment on first read.
+ *
+ * This used to run in an IIFE at module load, which meant merely *importing*
+ * this module required DATABASE_URL and AUTH_SECRET. `next build` imports it
+ * while collecting page data - a phase that runs every route's module graph in
+ * Node without serving a request - so a build had to be given production
+ * secrets to get past a step that never touches them. Deferring the parse to
+ * first read keeps the contract exactly as strict at runtime while letting the
+ * build load the module. See the matching note in `@/server/db`.
  */
-export const env = (() => {
-  if (!isServer) {
-    return new Proxy({} as z.infer<typeof serverSchema> & typeof parsedClient.data, {
-      get(_target, property) {
-        if (property in parsedClient.data) {
-          return parsedClient.data[property as keyof typeof parsedClient.data];
-        }
-        throw new Error(
-          `Attempted to read server environment variable "${String(property)}" on the client.`,
-        );
-      },
-    });
-  }
+function loadServerEnv(): ServerEnv {
+  if (serverEnv) return serverEnv;
 
   const parsedServer = serverSchema.safeParse(process.env);
   if (!parsedServer.success) {
@@ -80,8 +79,33 @@ export const env = (() => {
     throw new Error("Invalid server environment variables. See .env.example.");
   }
 
-  return { ...parsedServer.data, ...parsedClient.data };
-})();
+  serverEnv = { ...parsedServer.data, ...clientEnv };
+  return serverEnv;
+}
+
+/**
+ * Server configuration. Accessing this from client code throws rather than
+ * silently returning undefined, which is the failure mode that leaks secrets
+ * into a bundle.
+ */
+export const env = new Proxy({} as ServerEnv, {
+  get(_target, property) {
+    if (!isServer) {
+      if (property in clientEnv) {
+        return clientEnv[property as keyof typeof clientEnv];
+      }
+      throw new Error(
+        `Attempted to read server environment variable "${String(property)}" on the client.`,
+      );
+    }
+
+    return Reflect.get(loadServerEnv(), property) as unknown;
+  },
+
+  has(_target, property) {
+    return isServer ? Reflect.has(loadServerEnv(), property) : property in clientEnv;
+  },
+});
 
 /** True when both Google credentials are configured. */
 export const isGoogleAuthEnabled =
