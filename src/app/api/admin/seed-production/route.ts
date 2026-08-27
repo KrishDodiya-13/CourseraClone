@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 /**
  * TEMPORARY, ONE-TIME-USE endpoint to seed the production database with the
