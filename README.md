@@ -1,15 +1,16 @@
 # CourseraClone
 
-A modern, dynamic online learning platform inspired by modern EdTech platforms.
+A modern, full-stack online learning platform inspired by modern EdTech platforms
+such as Coursera.
 
-CourseraClone is a full-stack learning marketplace built with Next.js, TypeScript,
-Prisma and PostgreSQL. Learners browse an original course catalogue, enrol, work
-through video and reading lessons with progress that survives a reload or a lost
-connection, and finish with a verifiable certificate. Instructors and
-administrators get their own areas for authoring assessments and moderating the
-platform.
+CourseraClone is an independent educational project inspired by modern online
+learning platforms. It is built with Next.js, TypeScript, Prisma and PostgreSQL.
+Learners browse an original course catalogue, enrol, work through video and
+reading lessons with progress that survives a reload or a lost connection, and
+finish with a verifiable certificate. Instructors and administrators get their
+own areas for authoring assessments and moderating the platform.
 
-> This is an independent portfolio project. See the [Disclaimer](#disclaimer).
+> Not affiliated with Coursera. See the [Disclaimer](#disclaimer).
 
 ## Features
 
@@ -176,20 +177,24 @@ Requires **Node.js 20+**, **npm**, and a **PostgreSQL 16** database (Docker
 Compose provides one).
 
 ```bash
-# 1. install
+# 1. clone
+git clone https://github.com/KrishDodiya-13/CourseraClone.git
+cd CourseraClone
+
+# 2. install dependencies
 npm install
 
-# 2. configure
+# 3. configure environment variables
 cp .env.example .env.local     # then fill in your own values
 
-# 3. start PostgreSQL (optional — skip if you already run one)
+# 4. start PostgreSQL (optional — skip if you already run one)
 docker compose up -d
 
-# 4. create the schema and seed the catalogue
+# 5. create the schema and seed the catalogue
 npm run db:migrate
 npm run db:seed
 
-# 5. run
+# 6. start the development server
 npm run dev
 ```
 
@@ -231,11 +236,40 @@ secrets.
 | `npm run db:seed`     | Seed the development database               |
 | `npm run db:studio`   | Prisma Studio                               |
 | `npm run db:validate` | Validate the schema                         |
-| `npm run db:reset`    | Drop, re-migrate and re-seed (destructive)  |
 | `npm run art:build`   | Regenerate course thumbnails and banners    |
 
-Additional database-backed checks: `test:admin`, `test:payments`,
-`test:engagement`, `test:assessment`, `test:reset-flow`.
+## Testing
+
+```bash
+npm test              # Vitest unit tests, single run
+npm run test:watch    # Vitest in watch mode
+npm run test:e2e      # Playwright end-to-end suite
+```
+
+Unit tests live beside the code they cover (`*.test.ts`) and run in Vitest with
+jsdom and Testing Library. End-to-end specs live in [`e2e/`](e2e) and run in
+Playwright against a built app — smoke, authentication flow, responsive layout
+and offline behaviour.
+
+[`test/`](test) holds database-backed integration checks that exercise a real
+PostgreSQL instance. They need `DATABASE_URL` configured and are run
+individually:
+
+```bash
+npm run test:admin
+npm run test:payments
+npm run test:engagement
+npm run test:assessment
+npm run test:reset-flow
+```
+
+Static checks:
+
+```bash
+npm run typecheck
+npm run lint
+npm run format:check
+```
 
 ## Database
 
@@ -280,6 +314,11 @@ with Argon2id at run time.
 
 The application deploys to **Vercel** as a standard Next.js App Router project.
 
+A deployment requires two things that local development does not: its own
+production environment variables, set in the Vercel project settings rather than
+in a file, and a hosted PostgreSQL database. The local Docker Compose database is
+for development only.
+
 1. Push the repository to GitHub and import it into Vercel.
 2. Provision a PostgreSQL database (Vercel Postgres, Neon, Supabase or any other
    managed provider) and set `DATABASE_URL`.
@@ -296,7 +335,8 @@ Permissions-Policy) are configured in [`next.config.ts`](next.config.ts).
 ## Disclaimer
 
 This project is an independent educational project inspired by modern online
-learning platforms. It is not affiliated with or endorsed by Coursera.
+learning platforms. It is not affiliated with, endorsed by, or sponsored by
+Coursera.
 
 All course titles, descriptions, curricula, instructor profiles, artwork and
 other content in this repository are original and were written or generated for
