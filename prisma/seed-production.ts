@@ -16,7 +16,7 @@
 
 import { hash } from "@node-rs/argon2";
 
-import { generateSerial } from "../src/lib/certificate-serial.js";
+import { generateSerial } from "@/lib/certificate-serial";
 
 import { PrismaPg } from "@prisma/adapter-pg";
 
@@ -33,7 +33,7 @@ import {
   ResourceKind,
   ReviewStatus,
   UserRole,
-} from "../src/generated/prisma/client.js";
+} from "@/generated/prisma/client";
 
 // ---------------------------------------------------------------------------
 // Setup
