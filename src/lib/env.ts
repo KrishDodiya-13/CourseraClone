@@ -38,9 +38,20 @@ const serverSchema = z.object({
     .transform((value) => value === "true"),
 });
 
+/**
+ * An empty string is what several hosts (including Vercel, when a project's
+ * env var is added but left blank) send for an "unset" variable — `process.env`
+ * has no way to represent "absent" once a platform touches it. Without this,
+ * `z.url()` sees `""`, which is a string and therefore never falls through to
+ * `.default()`, and fails validation for a variable that was never really
+ * configured rather than misconfigured.
+ */
+const blankToUndefined = (value: unknown) =>
+  typeof value === "string" && value.trim() === "" ? undefined : value;
+
 const clientSchema = z.object({
-  NEXT_PUBLIC_APP_URL: z.url().default("http://localhost:3000"),
-  NEXT_PUBLIC_APP_NAME: z.string().default("Coursera"),
+  NEXT_PUBLIC_APP_URL: z.preprocess(blankToUndefined, z.url().default("http://localhost:3000")),
+  NEXT_PUBLIC_APP_NAME: z.preprocess(blankToUndefined, z.string().default("Coursera")),
 });
 
 const parsedClient = clientSchema.safeParse({
