@@ -1,0 +1,9 @@
+.next
+node_modules
+package-lock.json
+coverage
+src/generated
+prisma/migrations
+public/sw.js
+public/sw.js.map
+.next-dev/

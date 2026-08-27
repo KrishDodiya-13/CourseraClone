@@ -1,0 +1,698 @@
+@import "tailwindcss";
+
+/* next-themes writes class="dark" on <html>. */
+@custom-variant dark (&:is(.dark *));
+
+/* ==========================================================================
+   LUMEN DESIGN TOKENS
+   Palette: deep pine primary (growth / progress) + warm apricot accent
+   (achievement). Neutrals carry a slight green bias so they sit with the
+   primary rather than fighting it - no pure greys anywhere.
+   ========================================================================== */
+
+:root {
+  /* --- surfaces --------------------------------------------------------- */
+  --background: oklch(0.992 0.004 160);
+  --foreground: oklch(0.215 0.021 175);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.215 0.021 175);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.215 0.021 175);
+
+  /* --- brand ------------------------------------------------------------ */
+  --primary: oklch(0.5 0.098 172);
+  --primary-foreground: oklch(0.99 0.008 170);
+  --primary-hover: oklch(0.445 0.098 172);
+  --primary-subtle: oklch(0.955 0.026 172);
+  --primary-subtle-foreground: oklch(0.4 0.09 172);
+
+  /* --- accent (apricot) ------------------------------------------------- */
+  --accent: oklch(0.745 0.138 62);
+  --accent-foreground: oklch(0.26 0.06 55);
+  --accent-subtle: oklch(0.962 0.036 68);
+  --accent-subtle-foreground: oklch(0.42 0.11 58);
+
+  /* --- neutrals --------------------------------------------------------- */
+  --secondary: oklch(0.965 0.006 170);
+  --secondary-foreground: oklch(0.28 0.02 175);
+  --muted: oklch(0.965 0.006 170);
+  --muted-foreground: oklch(0.502 0.016 175);
+  --border: oklch(0.912 0.008 170);
+  --input: oklch(0.895 0.009 170);
+  --ring: oklch(0.5 0.098 172);
+
+  /* --- semantic status -------------------------------------------------- */
+  --success: oklch(0.585 0.126 155);
+  --success-foreground: oklch(0.99 0.01 155);
+  --success-subtle: oklch(0.955 0.035 155);
+  --warning: oklch(0.705 0.145 75);
+  --warning-foreground: oklch(0.24 0.06 70);
+  --warning-subtle: oklch(0.962 0.04 80);
+  --danger: oklch(0.565 0.192 25);
+  --danger-foreground: oklch(0.99 0.01 25);
+  --danger-subtle: oklch(0.958 0.028 25);
+  --info: oklch(0.575 0.108 245);
+  --info-foreground: oklch(0.99 0.01 245);
+  --info-subtle: oklch(0.958 0.028 245);
+
+  /* --- shape ------------------------------------------------------------ */
+  --radius: 0.625rem;
+
+  /* --- elevation: tinted with the neutral hue, never pure black --------- */
+  --shadow-color: 175 12% 14%;
+}
+
+.dark {
+  --background: oklch(0.168 0.012 175);
+  --foreground: oklch(0.952 0.008 170);
+  --card: oklch(0.212 0.014 175);
+  --card-foreground: oklch(0.952 0.008 170);
+  --popover: oklch(0.228 0.015 175);
+  --popover-foreground: oklch(0.952 0.008 170);
+
+  --primary: oklch(0.735 0.115 172);
+  --primary-foreground: oklch(0.18 0.03 175);
+  --primary-hover: oklch(0.79 0.11 172);
+  --primary-subtle: oklch(0.28 0.042 174);
+  --primary-subtle-foreground: oklch(0.82 0.1 172);
+
+  --accent: oklch(0.785 0.13 65);
+  --accent-foreground: oklch(0.22 0.05 55);
+  --accent-subtle: oklch(0.3 0.05 60);
+  --accent-subtle-foreground: oklch(0.86 0.12 68);
+
+  --secondary: oklch(0.262 0.015 175);
+  --secondary-foreground: oklch(0.93 0.01 170);
+  --muted: oklch(0.252 0.014 175);
+  --muted-foreground: oklch(0.706 0.016 172);
+  --border: oklch(0.312 0.016 175);
+  --input: oklch(0.34 0.018 175);
+  --ring: oklch(0.735 0.115 172);
+
+  --success: oklch(0.72 0.135 155);
+  --success-foreground: oklch(0.18 0.04 155);
+  --success-subtle: oklch(0.285 0.05 155);
+  --warning: oklch(0.79 0.14 78);
+  --warning-foreground: oklch(0.22 0.05 70);
+  --warning-subtle: oklch(0.3 0.05 75);
+  --danger: oklch(0.665 0.175 25);
+  --danger-foreground: oklch(0.16 0.04 25);
+  --danger-subtle: oklch(0.3 0.06 25);
+  --info: oklch(0.7 0.11 245);
+  --info-foreground: oklch(0.17 0.04 245);
+  --info-subtle: oklch(0.29 0.05 245);
+
+  --shadow-color: 175 30% 3%;
+}
+
+/* ==========================================================================
+   COLOR THEMES
+   Two selectable identities layered over the same semantic tokens. Only the
+   brand hues and the neutral bias change — every component reads `--primary`,
+   `--accent`, `--border` and so on, so neither theme needs a single line of
+   component code of its own.
+
+   The neutrals are re-tinted per theme rather than shared. A pure grey beside
+   indigo reads slightly yellow, and beside emerald slightly pink; biasing the
+   neutral a few degrees toward the primary is what makes a palette read as one
+   decision instead of a colour dropped onto a grey template.
+
+   Applied as `data-theme` on <html>, alongside next-themes' `.dark` class, so
+   appearance (light/dark/system) and identity (indigo/emerald) compose freely.
+   ========================================================================== */
+
+/* --- THEME 1 — MODERN INDIGO ---------------------------------------------
+   Academic and professional. Indigo carries authority without the coldness of
+   a pure blue; the amber accent is reserved for achievement — certificates,
+   streaks, ratings — so it stays meaningful rather than decorative. */
+
+[data-theme="indigo"] {
+  --background: oklch(0.988 0.003 265);
+  --foreground: oklch(0.205 0.024 268);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.205 0.024 268);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.205 0.024 268);
+
+  --primary: oklch(0.505 0.176 274);
+  --primary-foreground: oklch(0.99 0.005 270);
+  --primary-hover: oklch(0.445 0.178 274);
+  --primary-subtle: oklch(0.953 0.026 272);
+  --primary-subtle-foreground: oklch(0.415 0.155 274);
+
+  --accent: oklch(0.755 0.142 68);
+  --accent-foreground: oklch(0.26 0.06 55);
+  --accent-subtle: oklch(0.963 0.038 72);
+  --accent-subtle-foreground: oklch(0.43 0.115 62);
+
+  --secondary: oklch(0.963 0.006 268);
+  --secondary-foreground: oklch(0.275 0.024 268);
+  --muted: oklch(0.962 0.007 268);
+  --muted-foreground: oklch(0.498 0.018 268);
+  --border: oklch(0.906 0.009 268);
+  --input: oklch(0.888 0.011 268);
+  --ring: oklch(0.505 0.176 274);
+
+  --success: oklch(0.575 0.132 158);
+  --success-foreground: oklch(0.99 0.01 158);
+  --success-subtle: oklch(0.953 0.036 158);
+  --warning: oklch(0.712 0.148 76);
+  --warning-foreground: oklch(0.24 0.06 70);
+  --warning-subtle: oklch(0.962 0.042 80);
+  --danger: oklch(0.565 0.196 25);
+  --danger-foreground: oklch(0.99 0.01 25);
+  --danger-subtle: oklch(0.957 0.03 25);
+  --info: oklch(0.565 0.128 248);
+  --info-foreground: oklch(0.99 0.01 248);
+  --info-subtle: oklch(0.955 0.032 248);
+
+  --shadow-color: 268 22% 15%;
+}
+
+.dark[data-theme="indigo"],
+.dark [data-theme="indigo"] {
+  --background: oklch(0.172 0.017 268);
+  --foreground: oklch(0.952 0.008 268);
+  --card: oklch(0.216 0.021 268);
+  --card-foreground: oklch(0.952 0.008 268);
+  --popover: oklch(0.234 0.023 268);
+  --popover-foreground: oklch(0.952 0.008 268);
+
+  --primary: oklch(0.712 0.148 274);
+  --primary-foreground: oklch(0.16 0.04 272);
+  --primary-hover: oklch(0.772 0.132 274);
+  --primary-subtle: oklch(0.288 0.062 272);
+  --primary-subtle-foreground: oklch(0.822 0.108 274);
+
+  --accent: oklch(0.795 0.132 70);
+  --accent-foreground: oklch(0.22 0.05 55);
+  --accent-subtle: oklch(0.302 0.052 62);
+  --accent-subtle-foreground: oklch(0.87 0.12 70);
+
+  --secondary: oklch(0.266 0.022 268);
+  --secondary-foreground: oklch(0.93 0.01 268);
+  --muted: oklch(0.256 0.02 268);
+  --muted-foreground: oklch(0.706 0.018 268);
+  --border: oklch(0.318 0.023 268);
+  --input: oklch(0.346 0.025 268);
+  --ring: oklch(0.712 0.148 274);
+
+  --success: oklch(0.722 0.14 158);
+  --success-foreground: oklch(0.18 0.04 158);
+  --success-subtle: oklch(0.288 0.052 158);
+  --warning: oklch(0.795 0.142 78);
+  --warning-foreground: oklch(0.22 0.05 70);
+  --warning-subtle: oklch(0.302 0.052 75);
+  --danger: oklch(0.672 0.178 25);
+  --danger-foreground: oklch(0.16 0.04 25);
+  --danger-subtle: oklch(0.302 0.062 25);
+  --info: oklch(0.702 0.116 248);
+  --info-foreground: oklch(0.17 0.04 248);
+  --info-subtle: oklch(0.292 0.052 248);
+
+  --shadow-color: 268 40% 3%;
+}
+
+/* --- THEME 2 — EMERALD LEARNING -------------------------------------------
+   Fresher and more energetic. Emerald sits where indigo did; the accent moves
+   to a deep teal-cyan rather than amber, so the two themes are distinguishable
+   at a glance even in a screenshot with no chrome. */
+
+[data-theme="emerald"] {
+  --background: oklch(0.99 0.005 158);
+  --foreground: oklch(0.208 0.026 168);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.208 0.026 168);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.208 0.026 168);
+
+  --primary: oklch(0.548 0.132 162);
+  --primary-foreground: oklch(0.99 0.008 160);
+  --primary-hover: oklch(0.482 0.134 162);
+  --primary-subtle: oklch(0.952 0.038 162);
+  --primary-subtle-foreground: oklch(0.418 0.116 162);
+
+  --accent: oklch(0.585 0.108 218);
+  --accent-foreground: oklch(0.99 0.008 218);
+  --accent-subtle: oklch(0.952 0.034 216);
+  --accent-subtle-foreground: oklch(0.42 0.098 220);
+
+  --secondary: oklch(0.962 0.008 164);
+  --secondary-foreground: oklch(0.278 0.024 168);
+  --muted: oklch(0.961 0.009 164);
+  --muted-foreground: oklch(0.498 0.019 166);
+  --border: oklch(0.905 0.012 164);
+  --input: oklch(0.886 0.014 164);
+  --ring: oklch(0.548 0.132 162);
+
+  --success: oklch(0.562 0.138 148);
+  --success-foreground: oklch(0.99 0.01 148);
+  --success-subtle: oklch(0.95 0.04 148);
+  --warning: oklch(0.718 0.152 74);
+  --warning-foreground: oklch(0.24 0.06 70);
+  --warning-subtle: oklch(0.962 0.044 78);
+  --danger: oklch(0.562 0.198 24);
+  --danger-foreground: oklch(0.99 0.01 24);
+  --danger-subtle: oklch(0.956 0.032 24);
+  --info: oklch(0.578 0.112 236);
+  --info-foreground: oklch(0.99 0.01 236);
+  --info-subtle: oklch(0.955 0.03 236);
+
+  --shadow-color: 168 26% 13%;
+}
+
+.dark[data-theme="emerald"],
+.dark [data-theme="emerald"] {
+  --background: oklch(0.165 0.016 168);
+  --foreground: oklch(0.952 0.01 164);
+  --card: oklch(0.21 0.02 168);
+  --card-foreground: oklch(0.952 0.01 164);
+  --popover: oklch(0.228 0.022 168);
+  --popover-foreground: oklch(0.952 0.01 164);
+
+  --primary: oklch(0.752 0.142 162);
+  --primary-foreground: oklch(0.16 0.04 165);
+  --primary-hover: oklch(0.808 0.126 162);
+  --primary-subtle: oklch(0.284 0.058 164);
+  --primary-subtle-foreground: oklch(0.828 0.114 162);
+
+  --accent: oklch(0.712 0.108 218);
+  --accent-foreground: oklch(0.16 0.04 218);
+  --accent-subtle: oklch(0.29 0.05 217);
+  --accent-subtle-foreground: oklch(0.85 0.1 218);
+
+  --secondary: oklch(0.262 0.021 168);
+  --secondary-foreground: oklch(0.93 0.012 164);
+  --muted: oklch(0.252 0.019 168);
+  --muted-foreground: oklch(0.708 0.019 166);
+  --border: oklch(0.314 0.022 168);
+  --input: oklch(0.342 0.024 168);
+  --ring: oklch(0.752 0.142 162);
+
+  --success: oklch(0.726 0.145 148);
+  --success-foreground: oklch(0.18 0.04 148);
+  --success-subtle: oklch(0.286 0.055 148);
+  --warning: oklch(0.798 0.146 76);
+  --warning-foreground: oklch(0.22 0.05 70);
+  --warning-subtle: oklch(0.3 0.054 74);
+  --danger: oklch(0.668 0.18 24);
+  --danger-foreground: oklch(0.16 0.04 24);
+  --danger-subtle: oklch(0.3 0.064 24);
+  --info: oklch(0.708 0.11 236);
+  --info-foreground: oklch(0.17 0.04 236);
+  --info-subtle: oklch(0.29 0.05 236);
+
+  --shadow-color: 168 42% 3%;
+}
+
+/* --- THEME 3 — COURSERA BLUE ------------------------------------------
+   Matches the client's reference build: Coursera's own blue (#0056D2) as
+   primary, with a warm amber reserved for achievement (ratings, badges,
+   certificates) exactly as the other two identities do. Neutrals stay
+   close to true grey - the reference leans on flat white/#F3F4F5 surfaces
+   rather than a tinted neutral, so this theme's grey carries almost no
+   hue bias. */
+
+[data-theme="coursera"] {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.239 0 89.9);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.239 0 89.9);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.239 0 89.9);
+
+  --primary: oklch(0.493 0.204 260.2);
+  --primary-foreground: oklch(0.99 0.005 260);
+  --primary-hover: oklch(0.391 0.151 259);
+  --primary-subtle: oklch(0.956 0.017 259.4);
+  --primary-subtle-foreground: oklch(0.436 0.182 260.5);
+
+  --accent: oklch(0.784 0.159 73);
+  --accent-foreground: oklch(0.26 0.06 55);
+  --accent-subtle: oklch(0.967 0.025 81.1);
+  --accent-subtle-foreground: oklch(0.508 0.103 71.2);
+
+  --secondary: oklch(0.967 0.002 247.8);
+  --secondary-foreground: oklch(0.275 0.005 260);
+  --muted: oklch(0.967 0.002 247.8);
+  --muted-foreground: oklch(0.541 0.012 261.8);
+  --border: oklch(0.918 0.002 247.8);
+  --input: oklch(0.864 0.003 264.5);
+  --ring: oklch(0.493 0.204 260.2);
+
+  --success: oklch(0.575 0.132 158);
+  --success-foreground: oklch(0.99 0.01 158);
+  --success-subtle: oklch(0.953 0.036 158);
+  --warning: oklch(0.712 0.148 76);
+  --warning-foreground: oklch(0.24 0.06 70);
+  --warning-subtle: oklch(0.962 0.042 80);
+  --danger: oklch(0.565 0.196 25);
+  --danger-foreground: oklch(0.99 0.01 25);
+  --danger-subtle: oklch(0.957 0.03 25);
+  --info: oklch(0.565 0.128 248);
+  --info-foreground: oklch(0.99 0.01 248);
+  --info-subtle: oklch(0.955 0.032 248);
+
+  --shadow-color: 260 12% 15%;
+}
+
+.dark[data-theme="coursera"],
+.dark [data-theme="coursera"] {
+  --background: oklch(0.19 0.007 258.4);
+  --foreground: oklch(0.964 0.002 247.8);
+  --card: oklch(0.234 0.009 255.6);
+  --card-foreground: oklch(0.964 0.002 247.8);
+  --popover: oklch(0.25 0.01 255.6);
+  --popover-foreground: oklch(0.964 0.002 247.8);
+
+  --primary: oklch(0.685 0.143 256.1);
+  --primary-foreground: oklch(0.16 0.04 256);
+  --primary-hover: oklch(0.75 0.113 257);
+  --primary-subtle: oklch(0.346 0.089 253.6);
+  --primary-subtle-foreground: oklch(0.867 0.054 253.6);
+
+  --accent: oklch(0.841 0.133 80.8);
+  --accent-foreground: oklch(0.22 0.05 55);
+  --accent-subtle: oklch(0.343 0.057 74.7);
+  --accent-subtle-foreground: oklch(0.887 0.074 82.7);
+
+  --secondary: oklch(0.304 0.01 260.7);
+  --secondary-foreground: oklch(0.93 0.005 255);
+  --muted: oklch(0.28 0.009 258);
+  --muted-foreground: oklch(0.717 0.01 258.3);
+  --border: oklch(0.304 0.01 260.7);
+  --input: oklch(0.34 0.012 260);
+  --ring: oklch(0.685 0.143 256.1);
+
+  --success: oklch(0.72 0.135 158);
+  --success-foreground: oklch(0.18 0.04 158);
+  --success-subtle: oklch(0.285 0.05 158);
+  --warning: oklch(0.79 0.14 78);
+  --warning-foreground: oklch(0.22 0.05 70);
+  --warning-subtle: oklch(0.3 0.05 75);
+  --danger: oklch(0.665 0.175 25);
+  --danger-foreground: oklch(0.16 0.04 25);
+  --danger-subtle: oklch(0.3 0.06 25);
+  --info: oklch(0.702 0.116 248);
+  --info-foreground: oklch(0.17 0.04 248);
+  --info-subtle: oklch(0.292 0.052 248);
+
+  --shadow-color: 258 30% 3%;
+}
+
+/* ==========================================================================
+   THEME MAPPING - exposes the tokens above as Tailwind utilities
+   ========================================================================== */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-primary-subtle-foreground: var(--primary-subtle-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-subtle-foreground: var(--accent-subtle-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-subtle: var(--info-subtle);
+
+  /* --- type ------------------------------------------------------------- */
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, monospace;
+
+  /* Type scale - 1.200 minor third, tuned for UI density at the small end. */
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+  --text-2xs--letter-spacing: 0.04em;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 1.9rem;
+  --text-2xl--letter-spacing: -0.014em;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-3xl--letter-spacing: -0.02em;
+  --text-4xl: 2.375rem;
+  --text-4xl--line-height: 2.6rem;
+  --text-4xl--letter-spacing: -0.026em;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 3.15rem;
+  --text-5xl--letter-spacing: -0.032em;
+  --text-6xl: 3.75rem;
+  --text-6xl--line-height: 3.85rem;
+  --text-6xl--letter-spacing: -0.036em;
+
+  /* --- shape ------------------------------------------------------------ */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 10px);
+
+  /* --- breakpoints: Tailwind defaults + a narrow-phone stop ------------- */
+  --breakpoint-xs: 30rem;
+
+  /* --- elevation -------------------------------------------------------- */
+  --shadow-xs: 0 1px 2px hsl(var(--shadow-color) / 0.05);
+  --shadow-sm: 0 1px 2px hsl(var(--shadow-color) / 0.06), 0 1px 3px hsl(var(--shadow-color) / 0.04);
+  --shadow-md:
+    0 2px 4px hsl(var(--shadow-color) / 0.05), 0 6px 16px -6px hsl(var(--shadow-color) / 0.12);
+  --shadow-lg:
+    0 4px 8px hsl(var(--shadow-color) / 0.05), 0 16px 32px -12px hsl(var(--shadow-color) / 0.16);
+  --shadow-xl: 0 24px 56px -20px hsl(var(--shadow-color) / 0.24);
+
+  /* --- motion ----------------------------------------------------------- */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-in: fade-in 0.18s var(--ease-out-quint);
+  --animate-scale-in: scale-in 0.2s var(--ease-out-quint);
+  --animate-slide-up: slide-up 0.24s var(--ease-out-quint);
+  --animate-slide-in-left: slide-in-left 0.26s var(--ease-out-quint);
+  --animate-slide-in-right: slide-in-right 0.26s var(--ease-out-quint);
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* One focus treatment for the whole app. Mouse users never see it;
+     keyboard users always do, on every interactive element. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  ::selection {
+    background-color: var(--color-primary-subtle);
+    color: var(--color-primary-subtle-foreground);
+  }
+
+  /* Numeric columns line up wherever digits are compared. */
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* Skip-link: visually hidden until focused. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   PRINT — certificate
+   The download path is the browser's own "Save as PDF", so printing has to
+   produce a clean artefact rather than a screenshot of the app. Everything
+   except the certificate itself is removed, and the sheet is forced to fill
+   one landscape page.
+   ========================================================================== */
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 12mm;
+  }
+
+  /* Hide the whole app, then bring the certificate back. Cheaper and more
+     reliable than tagging every wrapper with a print:hidden class. */
+  body * {
+    visibility: hidden;
+  }
+
+  #certificate-sheet,
+  #certificate-sheet * {
+    visibility: visible;
+  }
+
+  #certificate-sheet {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    /* Backgrounds are dropped by default when printing, so the sheet relies on
+       borders and text; this keeps the border ink even in economy modes. */
+    border: 2px solid #0e7c6b;
+    aspect-ratio: auto;
+    break-inside: avoid;
+  }
+
+  /* Never let a link's href be appended to its text on the certificate. */
+  #certificate-sheet a::after {
+    content: none !important;
+  }
+}

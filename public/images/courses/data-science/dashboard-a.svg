@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-hidden="true">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d2f38"/><stop offset="1" stop-color="#06171d"/>
+    </linearGradient>
+    <radialGradient id="g2" cx="0.78" cy="0.12" r="0.75">
+      <stop offset="0" stop-color="#4fd1c5" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#4fd1c5" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="g3" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M64 0H0V64" fill="none" stroke="#1d6274" stroke-opacity="0.28" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="900" fill="url(#g1)"/>
+  <rect width="1600" height="900" fill="url(#g3)"/>
+  <rect width="1600" height="900" fill="url(#g2)"/>
+  
+  <defs>
+    <filter id="g4" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="26" flood-color="#000" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+  <rect x="340" y="180" width="920" height="560" rx="22"
+        fill="#12414e" stroke="#1d6274" stroke-width="2" filter="url(#g4)"/>
+  <rect x="380" y="220" width="240" height="18" rx="9" fill="#a8e4dd" opacity="0.5"/>
+  
+    <rect x="380" y="266" width="260" height="96" rx="14" fill="#06171d" opacity="0.5" stroke="#1d6274" stroke-width="2"/>
+    <rect x="404" y="290" width="104.22131839906797" height="12" rx="6" fill="#a8e4dd" opacity="0.35"/>
+    <rect x="404" y="316" width="152.9342282237485" height="24" rx="8" fill="#4fd1c5" opacity="0.9"/>
+    <rect x="670" y="266" width="260" height="96" rx="14" fill="#06171d" opacity="0.5" stroke="#1d6274" stroke-width="2"/>
+    <rect x="694" y="290" width="119.3832717766054" height="12" rx="6" fill="#a8e4dd" opacity="0.35"/>
+    <rect x="694" y="316" width="130.03220381680876" height="24" rx="8" fill="#a8e4dd" opacity="0.55"/>
+    <rect x="960" y="266" width="260" height="96" rx="14" fill="#06171d" opacity="0.5" stroke="#1d6274" stroke-width="2"/>
+    <rect x="984" y="290" width="73.63198538543656" height="12" rx="6" fill="#a8e4dd" opacity="0.35"/>
+    <rect x="984" y="316" width="156.75501324236393" height="24" rx="8" fill="#a8e4dd" opacity="0.55"/>
+  <line x1="400" y1="640" x2="1200" y2="640" stroke="#1d6274" stroke-width="3"/>
+  <rect x="420" y="373.7228950485587" width="52" height="266.2771049514413" rx="10" fill="#ffd479" opacity="0.4"/><rect x="504" y="524.1559599619359" width="52" height="115.84404003806412" rx="10" fill="#ffd479" opacity="0.4"/><rect x="588" y="570.3765952656977" width="52" height="69.62340473430231" rx="10" fill="#ffd479" opacity="0.4"/><rect x="672" y="512.4226109776646" width="52" height="127.57738902233541" rx="10" fill="#ffd479" opacity="0.4"/><rect x="756" y="417.0103385671973" width="52" height="222.98966143280268" rx="10" fill="#ffd479" opacity="0.4"/><rect x="840" y="463.0148879461922" width="52" height="176.98511205380782" rx="10" fill="#ffd479" opacity="0.4"/><rect x="924" y="540.7242397638038" width="52" height="99.27576023619622" rx="10" fill="#4fd1c5" opacity="0.95"/><rect x="1008" y="548.6484732525423" width="52" height="91.35152674745768" rx="10" fill="#ffd479" opacity="0.4"/><rect x="1092" y="513.5440032347105" width="52" height="126.45599676528946" rx="10" fill="#ffd479" opacity="0.4"/>
+  <polyline points="446,557.0581974508241 530,422.4087803578004 614,386.3241813983768 698,471.89871174748987 782,455.5217310320586 866,559.3851953651756 950,414.8038287740201 1034,553.8597779069096 1118,407.86826917901635" fill="none" stroke="#4fd1c5" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  <circle cx="446" cy="557.0581974508241" r="7" fill="#4fd1c5"/><circle cx="530" cy="422.4087803578004" r="7" fill="#4fd1c5"/><circle cx="614" cy="386.3241813983768" r="7" fill="#4fd1c5"/><circle cx="698" cy="471.89871174748987" r="7" fill="#4fd1c5"/><circle cx="782" cy="455.5217310320586" r="7" fill="#4fd1c5"/><circle cx="866" cy="559.3851953651756" r="7" fill="#4fd1c5"/><circle cx="950" cy="414.8038287740201" r="7" fill="#4fd1c5"/><circle cx="1034" cy="553.8597779069096" r="7" fill="#4fd1c5"/><circle cx="1118" cy="407.86826917901635" r="7" fill="#4fd1c5"/></svg>

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" role="img" aria-hidden="true">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1c2230"/><stop offset="1" stop-color="#0d1119"/>
+    </linearGradient>
+    <radialGradient id="g2" cx="0.78" cy="0.12" r="0.75">
+      <stop offset="0" stop-color="#94a3b8" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#94a3b8" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="g3" width="64" height="64" patternUnits="userSpaceOnUse">
+      <path d="M64 0H0V64" fill="none" stroke="#3f4c63" stroke-opacity="0.28" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1600" height="900" fill="url(#g1)"/>
+  <rect width="1600" height="900" fill="url(#g3)"/>
+  <rect width="1600" height="900" fill="url(#g2)"/>
+  
+  <defs>
+    <filter id="g4" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="26" flood-color="#000" flood-opacity="0.42"/>
+    </filter>
+  </defs>
+  <rect x="340" y="180" width="920" height="560" rx="22"
+        fill="#2a3345" stroke="#3f4c63" stroke-width="2" filter="url(#g4)"/>
+  <rect x="380" y="220" width="240" height="18" rx="9" fill="#cbd5e1" opacity="0.5"/>
+  
+    <rect x="380" y="266" width="260" height="96" rx="14" fill="#0d1119" opacity="0.5" stroke="#3f4c63" stroke-width="2"/>
+    <rect x="404" y="290" width="119.39576922915876" height="12" rx="6" fill="#cbd5e1" opacity="0.35"/>
+    <rect x="404" y="316" width="125.13316841330379" height="24" rx="8" fill="#94a3b8" opacity="0.9"/>
+    <rect x="670" y="266" width="260" height="96" rx="14" fill="#0d1119" opacity="0.5" stroke="#3f4c63" stroke-width="2"/>
+    <rect x="694" y="290" width="97.82655255869031" height="12" rx="6" fill="#cbd5e1" opacity="0.35"/>
+    <rect x="694" y="316" width="157.0503831282258" height="24" rx="8" fill="#cbd5e1" opacity="0.55"/>
+    <rect x="960" y="266" width="260" height="96" rx="14" fill="#0d1119" opacity="0.5" stroke="#3f4c63" stroke-width="2"/>
+    <rect x="984" y="290" width="90.41176528437063" height="12" rx="6" fill="#cbd5e1" opacity="0.35"/>
+    <rect x="984" y="316" width="101.77207645960152" height="24" rx="8" fill="#cbd5e1" opacity="0.55"/>
+  <line x1="400" y1="640" x2="1200" y2="640" stroke="#3f4c63" stroke-width="3"/>
+  <rect x="420" y="559.3152159987949" width="52" height="80.68478400120512" rx="10" fill="#60a5fa" opacity="0.4"/><rect x="504" y="392.55695392843336" width="52" height="247.44304607156664" rx="10" fill="#60a5fa" opacity="0.4"/><rect x="588" y="402.0603115297854" width="52" height="237.9396884702146" rx="10" fill="#60a5fa" opacity="0.4"/><rect x="672" y="386.7797017353587" width="52" height="253.22029826464131" rx="10" fill="#60a5fa" opacity="0.4"/><rect x="756" y="459.54864306375384" width="52" height="180.45135693624616" rx="10" fill="#60a5fa" opacity="0.4"/><rect x="840" y="533.205190890003" width="52" height="106.794809109997" rx="10" fill="#60a5fa" opacity="0.4"/><rect x="924" y="461.1203798628412" width="52" height="178.87962013715878" rx="10" fill="#94a3b8" opacity="0.95"/><rect x="1008" y="470.22430029232055" width="52" height="169.77569970767945" rx="10" fill="#60a5fa" opacity="0.4"/><rect x="1092" y="482.6699640415609" width="52" height="157.3300359584391" rx="10" fill="#60a5fa" opacity="0.4"/>
+  <polyline points="446,519.3923208164051 530,488.37259258609265 614,488.1725652143359 698,499.30612947326154 782,461.32514390628785 866,392.09312004968524 950,430.5245897034183 1034,517.3724237224087 1118,395.69228500593454" fill="none" stroke="#94a3b8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity="0.9"/>
+  <circle cx="446" cy="519.3923208164051" r="7" fill="#94a3b8"/><circle cx="530" cy="488.37259258609265" r="7" fill="#94a3b8"/><circle cx="614" cy="488.1725652143359" r="7" fill="#94a3b8"/><circle cx="698" cy="499.30612947326154" r="7" fill="#94a3b8"/><circle cx="782" cy="461.32514390628785" r="7" fill="#94a3b8"/><circle cx="866" cy="392.09312004968524" r="7" fill="#94a3b8"/><circle cx="950" cy="430.5245897034183" r="7" fill="#94a3b8"/><circle cx="1034" cy="517.3724237224087" r="7" fill="#94a3b8"/><circle cx="1118" cy="395.69228500593454" r="7" fill="#94a3b8"/></svg>

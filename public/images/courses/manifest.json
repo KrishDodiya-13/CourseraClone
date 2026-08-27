@@ -1,0 +1,138 @@
+{
+  "programming": [
+    "/images/courses/programming/code-editor-a.svg",
+    "/images/courses/programming/terminal-b.svg",
+    "/images/courses/programming/code-editor-c.svg",
+    "/images/courses/programming/terminal-d.svg",
+    "/images/courses/programming/code-editor-e.svg",
+    "/images/courses/programming/graph-f.svg"
+  ],
+  "web-development": [
+    "/images/courses/web-development/browser-a.svg",
+    "/images/courses/web-development/browser-b.svg",
+    "/images/courses/web-development/design-system-c.svg",
+    "/images/courses/web-development/browser-d.svg",
+    "/images/courses/web-development/code-editor-e.svg",
+    "/images/courses/web-development/design-system-f.svg"
+  ],
+  "data-science": [
+    "/images/courses/data-science/dashboard-a.svg",
+    "/images/courses/data-science/data-flow-b.svg",
+    "/images/courses/data-science/dashboard-c.svg",
+    "/images/courses/data-science/data-flow-d.svg",
+    "/images/courses/data-science/dashboard-e.svg",
+    "/images/courses/data-science/growth-f.svg"
+  ],
+  "artificial-intelligence": [
+    "/images/courses/artificial-intelligence/neural-net-a.svg",
+    "/images/courses/artificial-intelligence/neural-net-b.svg",
+    "/images/courses/artificial-intelligence/neural-net-c.svg",
+    "/images/courses/artificial-intelligence/neural-net-d.svg",
+    "/images/courses/artificial-intelligence/graph-e.svg",
+    "/images/courses/artificial-intelligence/data-flow-f.svg"
+  ],
+  "machine-learning": [
+    "/images/courses/machine-learning/neural-net-a.svg",
+    "/images/courses/machine-learning/dashboard-b.svg",
+    "/images/courses/machine-learning/neural-net-c.svg",
+    "/images/courses/machine-learning/neural-net-d.svg",
+    "/images/courses/machine-learning/data-flow-e.svg",
+    "/images/courses/machine-learning/graph-f.svg"
+  ],
+  "cybersecurity": [
+    "/images/courses/cybersecurity/shield-a.svg",
+    "/images/courses/cybersecurity/shield-b.svg",
+    "/images/courses/cybersecurity/shield-c.svg",
+    "/images/courses/cybersecurity/shield-d.svg",
+    "/images/courses/cybersecurity/shield-e.svg",
+    "/images/courses/cybersecurity/shield-f.svg"
+  ],
+  "cloud-computing": [
+    "/images/courses/cloud-computing/cloud-a.svg",
+    "/images/courses/cloud-computing/containers-b.svg",
+    "/images/courses/cloud-computing/cloud-c.svg",
+    "/images/courses/cloud-computing/containers-d.svg",
+    "/images/courses/cloud-computing/cloud-e.svg",
+    "/images/courses/cloud-computing/containers-f.svg"
+  ],
+  "devops": [
+    "/images/courses/devops/pipeline-a.svg",
+    "/images/courses/devops/containers-b.svg",
+    "/images/courses/devops/pipeline-c.svg",
+    "/images/courses/devops/terminal-d.svg",
+    "/images/courses/devops/pipeline-e.svg",
+    "/images/courses/devops/containers-f.svg"
+  ],
+  "database": [
+    "/images/courses/database/database-a.svg",
+    "/images/courses/database/database-b.svg",
+    "/images/courses/database/data-flow-c.svg",
+    "/images/courses/database/database-d.svg",
+    "/images/courses/database/database-e.svg",
+    "/images/courses/database/data-flow-f.svg"
+  ],
+  "computer-science": [
+    "/images/courses/computer-science/graph-a.svg",
+    "/images/courses/computer-science/graph-b.svg",
+    "/images/courses/computer-science/terminal-c.svg",
+    "/images/courses/computer-science/graph-d.svg",
+    "/images/courses/computer-science/code-editor-e.svg",
+    "/images/courses/computer-science/graph-f.svg"
+  ],
+  "business": [
+    "/images/courses/business/growth-a.svg",
+    "/images/courses/business/kanban-b.svg",
+    "/images/courses/business/growth-c.svg",
+    "/images/courses/business/dashboard-d.svg",
+    "/images/courses/business/kanban-e.svg",
+    "/images/courses/business/growth-f.svg"
+  ],
+  "finance": [
+    "/images/courses/finance/finance-a.svg",
+    "/images/courses/finance/finance-b.svg",
+    "/images/courses/finance/dashboard-c.svg",
+    "/images/courses/finance/finance-d.svg",
+    "/images/courses/finance/growth-e.svg",
+    "/images/courses/finance/finance-f.svg"
+  ],
+  "marketing": [
+    "/images/courses/marketing/growth-a.svg",
+    "/images/courses/marketing/dashboard-b.svg",
+    "/images/courses/marketing/growth-c.svg",
+    "/images/courses/marketing/growth-d.svg",
+    "/images/courses/marketing/dashboard-e.svg",
+    "/images/courses/marketing/kanban-f.svg"
+  ],
+  "design": [
+    "/images/courses/design/design-system-a.svg",
+    "/images/courses/design/design-system-b.svg",
+    "/images/courses/design/browser-c.svg",
+    "/images/courses/design/design-system-d.svg",
+    "/images/courses/design/design-system-e.svg",
+    "/images/courses/design/browser-f.svg"
+  ],
+  "personal-development": [
+    "/images/courses/personal-development/planner-a.svg",
+    "/images/courses/personal-development/planner-b.svg",
+    "/images/courses/personal-development/kanban-c.svg",
+    "/images/courses/personal-development/planner-d.svg",
+    "/images/courses/personal-development/planner-e.svg",
+    "/images/courses/personal-development/kanban-f.svg"
+  ],
+  "project-management": [
+    "/images/courses/project-management/kanban-a.svg",
+    "/images/courses/project-management/kanban-b.svg",
+    "/images/courses/project-management/planner-c.svg",
+    "/images/courses/project-management/kanban-d.svg",
+    "/images/courses/project-management/planner-e.svg",
+    "/images/courses/project-management/kanban-f.svg"
+  ],
+  "languages": [
+    "/images/courses/languages/language-a.svg",
+    "/images/courses/languages/language-b.svg",
+    "/images/courses/languages/language-c.svg",
+    "/images/courses/languages/language-d.svg",
+    "/images/courses/languages/language-e.svg",
+    "/images/courses/languages/language-f.svg"
+  ]
+}

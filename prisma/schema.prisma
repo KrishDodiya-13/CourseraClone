@@ -1,0 +1,1342 @@
+// Coursera — data model
+//
+// Conventions applied throughout:
+//  - Money is an Int of minor units (cents/paise) plus an ISO 4217 `currency`
+//    column. No Float or Decimal touches an amount, ever.
+//  - Prices are snapshotted onto OrderItem at checkout. Course.price is the
+//    current list price only, and repricing never rewrites history.
+//  - Personal data cascades from User; financial and audit records do not —
+//    they SetNull so an account deletion cannot erase an order or a log entry.
+//  - Denormalised aggregates (Course.ratingAvg, enrollmentCount, …) are
+//    maintained transactionally. Recomputing them per catalogue request is the
+//    first thing that would get slow.
+//  - Every table carries createdAt/updatedAt unless it is append-only.
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+// Prisma 7 moves the connection URL out of the schema: the CLI reads it from
+// prisma.config.ts, and the runtime client is constructed with a driver
+// adapter (see src/server/db.ts).
+datasource db {
+  provider   = "postgresql"
+  /// Declared so Prisma tracks the extension instead of proposing to drop the
+  /// trigram indexes that depend on it.
+  extensions = [pgTrgm(map: "pg_trgm")]
+}
+
+// ===========================================================================
+//  ENUMS
+// ===========================================================================
+
+enum UserRole {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum CourseStatus {
+  DRAFT
+  IN_REVIEW
+  PUBLISHED
+  REJECTED
+  ARCHIVED
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  ALL_LEVELS
+}
+
+enum CourseInstructorRole {
+  OWNER
+  CO_INSTRUCTOR
+  ASSISTANT
+}
+
+enum LessonType {
+  VIDEO
+  ARTICLE
+  PDF
+  QUIZ
+  ASSIGNMENT
+}
+
+/// Lifecycle of an uploaded video asset (Phase 8 media pipeline).
+enum MediaStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum ResourceKind {
+  PDF
+  FILE
+  LINK
+  CODE
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+  REFUNDED
+  CANCELLED
+}
+
+/// How an enrolment came to exist. Audited, because only a verified payment
+/// or an explicit free/grant path may create one.
+enum EnrollmentSource {
+  FREE
+  PURCHASE
+  ADMIN_GRANT
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+  ABANDONED
+}
+
+enum SubmissionStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  CHANGES_REQUESTED
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  HIDDEN
+  FLAGGED
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentProvider {
+  STRIPE
+  RAZORPAY
+  MANUAL
+}
+
+enum CouponType {
+  PERCENT
+  FIXED
+}
+
+enum NotificationType {
+  COURSE_PUBLISHED
+  LESSON_ADDED
+  ENROLMENT_CONFIRMED
+  ASSIGNMENT_REVIEWED
+  QUIZ_GRADED
+  CERTIFICATE_ISSUED
+  STREAK_AT_RISK
+  STREAK_MILESTONE
+  BADGE_EARNED
+  STUDY_REMINDER
+  ANNOUNCEMENT
+  PAYMENT_RECEIPT
+  ACCOUNT
+}
+
+enum ReminderFrequency {
+  DAILY
+  WEEKDAYS
+  WEEKLY
+  CUSTOM
+}
+
+enum BadgeTier {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  PUBLISH
+  UNPUBLISH
+  APPROVE
+  REJECT
+  SUSPEND
+  REINSTATE
+  REFUND
+  LOGIN
+  ROLE_CHANGE
+}
+
+// ===========================================================================
+//  IDENTITY
+// ===========================================================================
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  emailVerified DateTime?
+  /// Argon2id hash. Null for accounts created purely via an OAuth provider.
+  passwordHash  String?
+  name          String
+  role          UserRole   @default(STUDENT)
+  status        UserStatus @default(ACTIVE)
+  /// IANA zone, captured at signup. Streaks are computed in the user's own
+  /// day boundary, never UTC.
+  timezone      String     @default("UTC")
+  locale        String     @default("en-US")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  /// Soft delete — orders and audit rows must outlive the account.
+  deletedAt DateTime?
+
+  profile           Profile?
+  instructorProfile InstructorProfile?
+
+  accounts                Account[]
+  sessions                Session[]
+  passwordResetTokens     PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+
+  taughtCourses       CourseInstructor[]
+  enrollments         Enrollment[]
+  lessonProgress      LessonProgress[]
+  quizAttempts        QuizAttempt[]
+  submissions         AssignmentSubmission[] @relation("SubmissionAuthor")
+  reviewedSubmissions AssignmentSubmission[] @relation("SubmissionReviewer")
+  reviews             Review[]
+  wishlist            Wishlist[]
+  orders              Order[]
+  certificates        Certificate[]
+  notifications       Notification[]
+  reminders           CourseReminder[]
+  learningActivity    LearningActivity[]
+  streak              Streak?
+  badges              UserBadge[]
+  announcements       CourseAnnouncement[]
+  auditLogs           AuditLog[]
+  couponRedemptions   CouponRedemption[]
+
+  @@index([role, status])
+  @@index([createdAt])
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@map("users")
+}
+
+model Profile {
+  id          String  @id @default(cuid())
+  userId      String  @unique
+  headline    String?
+  bio         String?
+  avatarUrl   String?
+  websiteUrl  String?
+  location    String?
+  /// Free-form { platform: handle } map; no schema churn for a new network.
+  socialLinks Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model InstructorProfile {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  slug      String   @unique
+  headline  String
+  bio       String?
+  /// Topic labels shown on the instructor card.
+  expertise String[]
+
+  /// Denormalised aggregates, maintained transactionally.
+  ratingAvg    Float @default(0)
+  ratingCount  Int   @default(0)
+  studentCount Int   @default(0)
+  courseCount  Int   @default(0)
+
+  /// Opaque provider reference for payouts. Never a raw bank detail.
+  payoutAccountRef String?
+  /// Set when an admin approves the instructor application.
+  approvedAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payouts InstructorPayout[]
+
+  @@index([ratingAvg])
+  @@map("instructor_profiles")
+}
+
+// ===========================================================================
+//  AUTHENTICATION
+//  Account / Session / VerificationToken are Auth.js adapter tables — their
+//  column names are dictated by the adapter contract, not by our conventions,
+//  which is why they read differently from the rest of the schema.
+//  Sessions are JWT-backed, so the Session table stays empty in normal
+//  operation; the adapter still requires it to exist.
+// ===========================================================================
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+/// Email-verification and sign-in tokens issued by the Auth.js adapter.
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+/// Password reset. The raw token is emailed; only its SHA-256 hash is stored,
+/// so a database leak cannot be replayed to take over accounts. Single use —
+/// `consumedAt` is set inside the same transaction that changes the password.
+model PasswordResetToken {
+  id          String    @id @default(cuid())
+  userId      String
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  requestedIp String?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consumedAt])
+  @@index([expiresAt])
+  @@map("password_reset_tokens")
+}
+
+/// Email address confirmation, same hashed single-use design as above.
+model EmailVerificationToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  consumedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, consumedAt])
+  @@map("email_verification_tokens")
+}
+
+// ===========================================================================
+//  CATALOGUE
+// ===========================================================================
+
+model Category {
+  id          String  @id @default(cuid())
+  slug        String  @unique
+  name        String
+  description String
+  /// Key resolved to an icon component in the UI; never a class name.
+  iconKey     String  @default("code")
+  position    Int     @default(0)
+  /// Self-relation for sub-categories.
+  parentId    String?
+
+  /// Denormalised count of PUBLISHED courses.
+  courseCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryTree")
+  courses  Course[]
+
+  @@index([parentId, position])
+  @@map("categories")
+}
+
+model Tag {
+  id   String @id @default(cuid())
+  slug String @unique
+  name String
+
+  createdAt DateTime @default(now())
+
+  courses Course[] @relation("CourseTags")
+
+  @@index([name(ops: raw("gin_trgm_ops"))], type: Gin)
+  @@map("tags")
+}
+
+model Course {
+  id            String  @id @default(cuid())
+  slug          String  @unique
+  title         String
+  subtitle      String
+  description   String
+  thumbnailUrl  String?
+  promoVideoUrl String?
+
+  /// What a learner will be able to do afterwards. Ordered; rendered as the
+  /// "what you will learn" checklist on the course page.
+  learningObjectives String[]
+  /// What they are expected to know already. Empty means no prerequisites,
+  /// which is a meaningful statement rather than missing data.
+  prerequisites      String[]
+  level              CourseLevel  @default(ALL_LEVELS)
+  status             CourseStatus @default(DRAFT)
+  language           String       @default("en")
+  categoryId         String
+
+  /// Integer minor units. 0 means free.
+  priceAmount     Int    @default(0)
+  /// Strike-through original price, or null when not discounted.
+  compareAtAmount Int?
+  currency        String @default("INR")
+
+  /// Denormalised aggregates — see header note.
+  ratingAvg       Float @default(0)
+  ratingCount     Int   @default(0)
+  enrollmentCount Int   @default(0)
+  lessonCount     Int   @default(0)
+  durationMinutes Int   @default(0)
+
+  isBestseller       Boolean   @default(false)
+  /// When true, a lesson only unlocks once the previous required lesson is
+  /// complete. Off by default: most courses are reference material people
+  /// dip into, and locking those is hostile rather than helpful.
+  sequentialProgress Boolean   @default(false)
+  publishedAt        DateTime?
+  /// Set when an admin rejects a submission; shown to the instructor.
+  rejectionReason    String?
+
+  /// Full-text search document, GENERATED ALWAYS from title/subtitle/
+  /// description with A/B/C weighting. Postgres maintains it on every write —
+  /// there is no application code that can forget to update it. Declared
+  /// Unsupported because Prisma has no tsvector type; the generated
+  /// expression lives in the migration.
+  searchVector Unsupported("tsvector")?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  category      Category             @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  tags          Tag[]                @relation("CourseTags")
+  instructors   CourseInstructor[]
+  sections      Section[]
+  lessons       Lesson[]
+  enrollments   Enrollment[]
+  reviews       Review[]
+  wishlistedBy  Wishlist[]
+  orderItems    OrderItem[]
+  certificates  Certificate[]
+  announcements CourseAnnouncement[]
+  reminders     CourseReminder[]
+  coupons       Coupon[]             @relation("CouponCourses")
+
+  /// The catalogue only ever reads PUBLISHED; these carry the sorts and the
+  /// facet filters. The GIN index on searchVector is added in the migration,
+  /// since Prisma cannot express an operator class for an Unsupported column.
+  @@index([status, categoryId, publishedAt])
+  @@index([status, ratingAvg])
+  @@index([status, enrollmentCount])
+  @@index([status, priceAmount])
+  @@index([status, durationMinutes])
+  @@index([status, level])
+  @@index([status, language])
+  @@index([status, createdAt])
+  /// Declared here so Prisma does not propose dropping them as drift. The
+  /// operator classes are what make full-text and trigram search index-backed.
+  @@index([searchVector(ops: raw("tsvector_ops"))], type: Gin)
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin)
+  /// The catalogue always pairs category with status, but admin moderation
+  /// filters by category across every status, which the composite above
+  /// cannot serve because status leads it.
+  @@index([categoryId])
+  @@map("courses")
+}
+
+/// Join table. A course may be co-taught, and revenue splits live here rather
+/// than on the course, so a split change cannot silently rewrite past orders.
+model CourseInstructor {
+  id              String               @id @default(cuid())
+  courseId        String
+  userId          String
+  role            CourseInstructorRole @default(OWNER)
+  /// Basis points of net revenue. 10000 = 100%.
+  revenueShareBps Int                  @default(10000)
+
+  createdAt DateTime @default(now())
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([courseId, userId])
+  @@index([userId])
+  @@map("course_instructors")
+}
+
+model Section {
+  id          String  @id @default(cuid())
+  courseId    String
+  title       String
+  description String?
+  position    Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+
+  @@unique([courseId, position])
+  @@index([courseId])
+  @@map("sections")
+}
+
+model Lesson {
+  id            String     @id @default(cuid())
+  sectionId     String
+  /// Denormalised from Section. Every progress and access check needs
+  /// lesson -> course; carrying it here removes a join from the hottest
+  /// query in the player. Maintained on write, never edited independently.
+  courseId      String
+  title         String
+  summary       String?
+  type          LessonType
+  position      Int
+  /// Playable without an enrolment when true.
+  isFreePreview Boolean    @default(false)
+  /// Counts toward course completion. Optional lessons (bonus material,
+  /// appendices) can be skipped without blocking a certificate.
+  isRequired    Boolean    @default(true)
+
+  /// VIDEO: length of the asset. Others: expected time to complete.
+  durationSeconds Int @default(0)
+
+  /// ARTICLE payload. Stored as rich-text HTML produced by the editor.
+  articleContent String?
+
+  /// VIDEO: opaque provider identifiers (Phase 8). A playback id is only ever
+  /// rendered after an enrolment check.
+  videoAssetId    String?
+  videoPlaybackId String?
+  videoStatus     MediaStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  section    Section          @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  course     Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  resources  LessonResource[]
+  quiz       Quiz?
+  assignment Assignment?
+  progress   LessonProgress[]
+  lastSeenBy CourseProgress[] @relation("LastViewedLesson")
+
+  @@unique([sectionId, position])
+  @@index([courseId, type])
+  @@map("lessons")
+}
+
+model LessonResource {
+  id            String       @id @default(cuid())
+  lessonId      String
+  title         String
+  kind          ResourceKind
+  /// Object-storage key, never a public URL — access is signed per request.
+  fileKey       String?
+  /// Populated for LINK resources instead of fileKey.
+  externalUrl   String?
+  mimeType      String?
+  fileSizeBytes Int?
+  position      Int          @default(0)
+
+  createdAt DateTime @default(now())
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId, position])
+  @@map("lesson_resources")
+}
+
+// ===========================================================================
+//  LEARNING & PROGRESS
+// ===========================================================================
+
+model Enrollment {
+  id       String           @id @default(cuid())
+  userId   String
+  courseId String
+  status   EnrollmentStatus @default(ACTIVE)
+  source   EnrollmentSource
+  /// Set for PURCHASE enrolments. SetNull keeps the enrolment if an order row
+  /// is ever archived.
+  orderId  String?
+
+  enrolledAt  DateTime  @default(now())
+  completedAt DateTime?
+  /// Null means perpetual access.
+  expiresAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  order    Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  progress CourseProgress?
+
+  @@unique([userId, courseId])
+  @@index([courseId, status])
+  @@index([userId, status])
+  /// Refund reversal reads and updates every enrolment for one order. Without
+  /// this the only path is a sequential scan of the whole table, on a code
+  /// path that already holds a transaction open.
+  @@index([orderId])
+  @@map("enrollments")
+}
+
+/// One row per user per lesson. `positionSeconds` is the resume point.
+model LessonProgress {
+  id       String @id @default(cuid())
+  userId   String
+  lessonId String
+
+  positionSeconds Int       @default(0)
+  completed       Boolean   @default(false)
+  completedAt     DateTime?
+  lastViewedAt    DateTime  @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId, completed])
+  @@map("lesson_progress")
+}
+
+/// Rolled-up progress for one enrolment. Derived from LessonProgress, kept
+/// materialised so a dashboard listing does not aggregate per course.
+model CourseProgress {
+  id           String @id @default(cuid())
+  enrollmentId String @unique
+
+  completedLessons Int @default(0)
+  totalLessons     Int @default(0)
+  /// 0-100, rounded. Cheap to sort and filter on.
+  percent          Int @default(0)
+
+  lastLessonId   String?
+  lastActivityAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  enrollment Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lastLesson Lesson?    @relation("LastViewedLesson", fields: [lastLessonId], references: [id], onDelete: SetNull)
+
+  @@index([percent])
+  @@map("course_progress")
+}
+
+// ===========================================================================
+//  ASSESSMENT
+// ===========================================================================
+
+model Quiz {
+  id       String @id @default(cuid())
+  /// A quiz belongs to exactly one lesson of type QUIZ.
+  lessonId String @unique
+
+  title            String
+  description      String?
+  /// Percentage required to pass, 0-100.
+  passingScore     Int     @default(70)
+  /// Null means unlimited.
+  maxAttempts      Int?
+  timeLimitMinutes Int?
+  shuffleQuestions Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lesson    Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+  attempts  QuizAttempt[]
+
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id          String       @id @default(cuid())
+  quizId      String
+  prompt      String
+  type        QuestionType @default(SINGLE_CHOICE)
+  /// Shown after grading, not before.
+  explanation String?
+  points      Int          @default(1)
+  position    Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options QuizOption[]
+  answers QuizAnswer[]
+
+  @@unique([quizId, position])
+  @@map("quiz_questions")
+}
+
+/// `isCorrect` lives here and must never be selected into a client payload
+/// before an attempt is submitted.
+model QuizOption {
+  id         String  @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean @default(false)
+  position   Int
+
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  QuizAnswer[] @relation("SelectedOption")
+
+  @@unique([questionId, position])
+  @@map("quiz_options")
+}
+
+model QuizAttempt {
+  id     String        @id @default(cuid())
+  quizId String
+  userId String
+  status AttemptStatus @default(IN_PROGRESS)
+
+  /// Points scored and available, not percentages — the percentage is derived
+  /// so a later points change cannot corrupt a stored result.
+  score         Int     @default(0)
+  maxScore      Int     @default(0)
+  passed        Boolean @default(false)
+  /// Monotonic per user per quiz, for attempt limits.
+  attemptNumber Int
+
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+  gradedAt    DateTime?
+
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user    User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  answers QuizAnswer[]
+
+  @@unique([quizId, userId, attemptNumber])
+  @@index([userId, status])
+  @@map("quiz_attempts")
+}
+
+/// One row per selected option, rather than a JSON blob on the attempt —
+/// without this, per-question analytics ("which distractor catches people")
+/// is impossible.
+model QuizAnswer {
+  id         String @id @default(cuid())
+  attemptId  String
+  questionId String
+  optionId   String
+
+  isCorrect Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  attempt  QuizAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  option   QuizOption   @relation("SelectedOption", fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId, optionId])
+  @@index([questionId])
+  @@map("quiz_answers")
+}
+
+model Assignment {
+  id       String @id @default(cuid())
+  lessonId String @unique
+
+  title              String
+  instructions       String
+  rubric             String?
+  maxPoints          Int     @default(100)
+  /// Days after enrolment that this is nominally due. Null means no due date.
+  dueInDays          Int?
+  allowResubmission  Boolean @default(true)
+  /// Whether a learner may attach a link (repo, document, deployed page)
+  /// alongside their written answer.
+  allowUrlSubmission Boolean @default(true)
+  /// Binary upload. Off by default and inert until an object-storage
+  /// provider is configured — see the note in the submission form.
+  allowFileUpload    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lesson      Lesson                 @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  submissions AssignmentSubmission[]
+
+  @@map("assignments")
+}
+
+model AssignmentSubmission {
+  id            String           @id @default(cuid())
+  assignmentId  String
+  userId        String
+  status        SubmissionStatus @default(DRAFT)
+  /// Monotonic per user per assignment.
+  attemptNumber Int
+
+  submissionText String?
+  /// Link to work hosted elsewhere.
+  submissionUrl  String?
+  fileKey        String?
+
+  score        Int?
+  feedback     String?
+  reviewedById String?
+
+  submittedAt DateTime?
+  reviewedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user       User       @relation("SubmissionAuthor", fields: [userId], references: [id], onDelete: Cascade)
+  reviewedBy User?      @relation("SubmissionReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@unique([assignmentId, userId, attemptNumber])
+  @@index([assignmentId, status])
+  @@map("assignment_submissions")
+}
+
+// ===========================================================================
+//  SOCIAL PROOF
+// ===========================================================================
+
+model Review {
+  id       String       @id @default(cuid())
+  courseId String
+  userId   String
+  /// 1-5. Enforced in application validation and by a CHECK constraint added
+  /// in the initial migration.
+  rating   Int
+  title    String?
+  body     String
+  status   ReviewStatus @default(PUBLISHED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// One review per person per course.
+  @@unique([courseId, userId])
+  @@index([courseId, status, createdAt])
+  @@map("reviews")
+}
+
+model Wishlist {
+  id       String @id @default(cuid())
+  userId   String
+  courseId String
+
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([userId, createdAt])
+  @@map("wishlists")
+}
+
+// ===========================================================================
+//  COMMERCE
+// ===========================================================================
+
+model Order {
+  id          String      @id @default(cuid())
+  /// Human-quotable reference, e.g. CRS-2K7F4C. Unique and stable.
+  orderNumber String      @unique
+  userId      String
+  status      OrderStatus @default(PENDING)
+
+  subtotalAmount Int
+  discountAmount Int    @default(0)
+  totalAmount    Int
+  currency       String @default("INR")
+
+  couponId String?
+
+  /// Which provider this order was sent to. Null until checkout starts.
+  provider          PaymentProvider?
+  /// The provider's checkout session id, so a returning browser and an
+  /// arriving webhook can both be matched back to this order.
+  providerSessionId String?          @unique
+  /// A PENDING order past this is abandoned and may be reaped. Nothing is
+  /// reserved by it, so expiry costs the learner nothing.
+  expiresAt         DateTime?
+
+  placedAt   DateTime  @default(now())
+  paidAt     DateTime?
+  refundedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// SetNull, not Cascade: a deleted account must not erase its order history.
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  coupon      Coupon?                @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  items       OrderItem[]
+  payments    Payment[]
+  enrollments Enrollment[]
+  redemption  CouponRedemption?
+  payoutLines InstructorPayoutLine[]
+
+  @@index([userId, status])
+  @@index([status, placedAt])
+  @@index([status, expiresAt])
+  @@map("orders")
+}
+
+/// Price snapshot. `unitAmount` is copied at checkout and never updated, so a
+/// repriced course cannot rewrite what someone paid.
+model OrderItem {
+  id       String @id @default(cuid())
+  orderId  String
+  courseId String
+
+  /// Snapshot of Course.priceAmount at the moment of order creation.
+  unitAmount      Int
+  /// Snapshot of the title, so a renamed course still reads correctly on an
+  /// old receipt.
+  titleSnapshot   String
+  currency        String @default("INR")
+  /// Snapshot of the owning instructor's split at purchase time.
+  revenueShareBps Int    @default(10000)
+
+  createdAt DateTime @default(now())
+
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  /// Restrict: a course that has been sold cannot be hard-deleted.
+  course Course @relation(fields: [courseId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, courseId])
+  @@index([courseId])
+  @@map("order_items")
+}
+
+model Payment {
+  id       String          @id @default(cuid())
+  orderId  String
+  provider PaymentProvider
+  status   PaymentStatus   @default(PENDING)
+
+  /// Provider's payment/intent identifier.
+  providerPaymentId String  @unique
+  /// Webhook event id. Unique, and the idempotency key that makes a retried
+  /// webhook a no-op rather than a double enrolment.
+  providerEventId   String? @unique
+
+  amount     Int
+  currency   String @default("INR")
+  /// Raw provider payload, retained for reconciliation and dispute handling.
+  rawPayload Json?
+
+  failureReason String?
+  processedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, status])
+  @@map("payments")
+}
+
+model Coupon {
+  id    String     @id @default(cuid())
+  code  String     @unique
+  type  CouponType
+  /// PERCENT: 1-100. FIXED: minor units in `currency`.
+  value Int
+
+  currency        String?
+  minOrderAmount  Int?
+  maxRedemptions  Int?
+  /// Denormalised, incremented in the same transaction as a redemption.
+  redemptionCount Int     @default(0)
+  perUserLimit    Int     @default(1)
+
+  startsAt DateTime  @default(now())
+  endsAt   DateTime?
+  isActive Boolean   @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// Empty means the coupon applies to the whole catalogue.
+  courses     Course[]           @relation("CouponCourses")
+  orders      Order[]
+  redemptions CouponRedemption[]
+
+  @@index([isActive, endsAt])
+  @@map("coupons")
+}
+
+/// One row per successful use. Enforces per-user limits and gives refunds
+/// something concrete to reverse.
+model CouponRedemption {
+  id       String @id @default(cuid())
+  couponId String
+  userId   String
+  orderId  String @unique
+
+  discountAmount Int
+
+  createdAt DateTime @default(now())
+
+  coupon Coupon @relation(fields: [couponId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order  Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([couponId, userId])
+  @@map("coupon_redemptions")
+}
+
+/// Instructor earnings ledger. Payout totals are read from these lines, so
+/// revenue analytics and actual payouts can never disagree.
+model InstructorPayout {
+  id                  String @id @default(cuid())
+  instructorProfileId String
+
+  amount   Int
+  currency String @default("INR")
+
+  periodStart DateTime
+  periodEnd   DateTime
+  paidAt      DateTime?
+  providerRef String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  instructorProfile InstructorProfile      @relation(fields: [instructorProfileId], references: [id], onDelete: Cascade)
+  lines             InstructorPayoutLine[]
+
+  @@index([instructorProfileId, periodStart])
+  @@map("instructor_payouts")
+}
+
+model InstructorPayoutLine {
+  id       String  @id @default(cuid())
+  payoutId String?
+  orderId  String
+
+  /// Negative for a refund reversal.
+  amount   Int
+  currency String @default("INR")
+
+  createdAt DateTime @default(now())
+
+  payout InstructorPayout? @relation(fields: [payoutId], references: [id], onDelete: SetNull)
+  order  Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([payoutId])
+  @@map("instructor_payout_lines")
+}
+
+// ===========================================================================
+//  CREDENTIALS
+// ===========================================================================
+
+model Certificate {
+  id       String @id @default(cuid())
+  userId   String
+  courseId String
+
+  /// Public verification code. Anyone can check a certificate with this and
+  /// no account.
+  serial String @unique
+
+  /// Snapshots, so a renamed course or instructor does not alter an issued
+  /// certificate.
+  courseTitleSnapshot    String
+  recipientNameSnapshot  String
+  /// Who taught it, captured at issue time. A certificate records what was
+  /// true then — a later change of instructor must not rewrite it.
+  instructorNameSnapshot String @default("")
+
+  issuedAt  DateTime  @default(now())
+  pdfKey    String?
+  revokedAt DateTime?
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  /// Issued once per person per course.
+  @@unique([userId, courseId])
+  @@map("certificates")
+}
+
+// ===========================================================================
+//  ENGAGEMENT
+// ===========================================================================
+
+model Notification {
+  id     String           @id @default(cuid())
+  userId String
+  type   NotificationType
+
+  title String
+  body  String
+  href  String?
+
+  /// Stops a retried job sending the same notification twice.
+  dedupeKey String?
+
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
+}
+
+model CourseReminder {
+  id       String  @id @default(cuid())
+  userId   String
+  /// Null means a general study reminder rather than a course-specific one.
+  courseId String?
+
+  frequency  ReminderFrequency @default(DAILY)
+  /// "HH:mm" in the user's own timezone, stored alongside it.
+  timeOfDay  String            @default("19:00")
+  timezone   String            @default("UTC")
+  /// 0 = Sunday. Used when frequency is WEEKLY or CUSTOM.
+  daysOfWeek Int[]
+
+  isActive   Boolean   @default(true)
+  nextRunAt  DateTime?
+  lastSentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course? @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([isActive, nextRunAt])
+  @@index([userId])
+  @@map("course_reminders")
+}
+
+/// Daily activity log. Streaks are recomputed from these rows rather than
+/// incremented in place, so a timezone bug cannot silently corrupt a streak.
+model LearningActivity {
+  id     String   @id @default(cuid())
+  userId String
+  /// Date only, in the user's timezone.
+  date   DateTime @db.Date
+
+  minutesLearned   Int @default(0)
+  lessonsCompleted Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([date])
+  @@map("learning_activity")
+}
+
+model Streak {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  currentDays    Int       @default(0)
+  longestDays    Int       @default(0)
+  lastActiveDate DateTime? @db.Date
+  timezone       String    @default("UTC")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("streaks")
+}
+
+model Badge {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String
+  iconKey     String    @default("award")
+  tier        BadgeTier @default(BRONZE)
+  /// Machine-readable rule the awarding job evaluates, e.g.
+  /// { "kind": "streak_days", "threshold": 7 }.
+  criteria    Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  awardedTo UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id      String @id @default(cuid())
+  userId  String
+  badgeId String
+
+  awardedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@index([userId, awardedAt])
+  @@map("user_badges")
+}
+
+model CourseAnnouncement {
+  id       String @id @default(cuid())
+  courseId String
+  authorId String
+
+  title String
+  body  String
+
+  publishedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  author User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([courseId, publishedAt])
+  @@map("course_announcements")
+}
+
+// ===========================================================================
+//  OPERATIONS
+// ===========================================================================
+
+/// Append-only. Nothing in the application updates or deletes a row here, and
+/// the actor is SetNull rather than Cascade so deleting a user cannot erase
+/// what they did.
+model AuditLog {
+  id      String      @id @default(cuid())
+  actorId String?
+  action  AuditAction
+
+  entityType String
+  entityId   String
+
+  /// Before/after diff or request context.
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
